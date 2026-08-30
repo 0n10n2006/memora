@@ -1,35 +1,48 @@
 def build_searchable_text(memory):
     """
-    Build a unified semantic representation of a MemoryItem.
+    Build the searchable representation of a MemoryObject.
 
     Combines:
-    - OCR / extracted text
-    - AI description
+    - title
+    - AI-generated summary
+    - visual description
+    - semantic topics
     - entities
-    - useful metadata
+    - original OCR / extracted content
     """
 
-    sections = []
+    parts = []
 
-    if memory.content:
-        sections.append(
-            f"Extracted text:\n{memory.content}"
+    if memory.title:
+        parts.append(
+            f"Title: {memory.title}"
+        )
+
+    if memory.summary:
+        parts.append(
+            f"Summary: {memory.summary}"
         )
 
     if memory.description:
-        sections.append(
-            f"Visual description:\n{memory.description}"
+        parts.append(
+            f"Description: {memory.description}"
+        )
+
+    if memory.topics:
+        parts.append(
+            "Topics: "
+            + ", ".join(memory.topics)
         )
 
     if memory.entities:
-        sections.append(
-            "Entities:\n"
+        parts.append(
+            "Entities: "
             + ", ".join(memory.entities)
         )
 
-    if memory.modality:
-        sections.append(
-            f"Content type: {memory.modality}"
+    if memory.content:
+        parts.append(
+            f"Content:\n{memory.content}"
         )
 
-    return "\n\n".join(sections)
+    return "\n\n".join(parts)

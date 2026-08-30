@@ -41,11 +41,35 @@ def extract_docx(path):
 
 def extract_txt(path):
 
+    # Most files are UTF-8, but a raw UnicodeDecodeError on
+    # anything else (Windows-exported notes, older files, etc.)
+    # used to crash the whole ingest with no fallback. Try the
+    # common cases in order; latin-1 always succeeds last since
+    # it maps every possible byte value, so this never raises.
+
+    for encoding in ("utf-8", "utf-8-sig", "cp1252", "latin-1"):
+
+        try:
+
+            text = Path(path).read_text(
+                encoding=encoding
+            )
+
+            return text, {"encoding": encoding}
+
+        except UnicodeDecodeError:
+
+            continue
+
+    # Unreachable in practice (latin-1 always succeeds), kept
+    # only as an explicit fallback rather than falling through
+    # silently.
+
     text = Path(path).read_text(
-        encoding="utf-8"
+        encoding="latin-1"
     )
 
-    return text, {}
+    return text, {"encoding": "latin-1"}
 
 
 def extract_xlsx(path):
