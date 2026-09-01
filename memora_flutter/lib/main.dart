@@ -81,6 +81,8 @@ class MemoraController extends ChangeNotifier {
       return true;
     } on SocketException {
       error = 'Cannot reach MEMORA. Check the server address and Wi-Fi.';
+    } on TimeoutException {
+      error = 'MEMORA took too long to respond. Check that the server is ready.';
     } on HttpException catch (e) {
       error = e.message;
     } on FormatException {
@@ -90,6 +92,30 @@ class MemoraController extends ChangeNotifier {
       notifyListeners();
     }
     return false;
+  }
+
+  Future<String?> testConnection() async {
+    loading = true;
+    error = null;
+    notifyListeners();
+
+    try {
+      final health = await MemoraApi(baseUrl).health();
+      return '${health.memoriesStored} memories available';
+    } on SocketException {
+      error = 'Cannot reach MEMORA. Check the server address and Wi-Fi.';
+    } on TimeoutException {
+      error = 'MEMORA took too long to respond. Check that the server is ready.';
+    } on HttpException catch (e) {
+      error = e.message;
+    } on FormatException {
+      error = 'The server returned an unexpected response.';
+    } finally {
+      loading = false;
+      notifyListeners();
+    }
+
+    return null;
   }
 
   Future<UploadResult> upload(File file) async {
@@ -103,7 +129,8 @@ class MemoraController extends ChangeNotifier {
         TimelineEntry(
           time: DateTime.now(),
           title: 'Added ${file.uri.pathSegments.last}',
-          subtitle: '${result.chunks} memory fragments indexed',
+          subtitle: '${result.chunks} memory fragments indexed'
+              '${result.relationshipsFound > 0 ? ' · ${result.relationshipsFound} relationships found' : ''}',
           icon: Icons.add_photo_alternate_outlined,
         ),
       );
@@ -111,6 +138,10 @@ class MemoraController extends ChangeNotifier {
     } on SocketException {
       throw const MemoraException(
         'Cannot reach MEMORA. Check the server address and Wi-Fi.',
+      );
+    } on TimeoutException {
+      throw const MemoraException(
+        'MEMORA took too long to respond. Check that the server is ready.',
       );
     } on HttpException catch (e) {
       throw MemoraException(e.message);
@@ -354,8 +385,14 @@ class _AddMemoryPageState extends State<AddMemoryPage> {
   }
 
   Future<void> _pickFile() async {
-    final selection = await FilePicker.pickFile();
-    final path = selection?.path;
+    final selection = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: const [
+        'pdf', 'docx', 'txt', 'md', 'xlsx',
+        'jpg', 'jpeg', 'png', 'webp',
+      ],
+    );
+    final path = selection?.files.single.path;
     if (path != null) await _upload(File(path));
   }
 
@@ -390,7 +427,7 @@ class _AddMemoryPageState extends State<AddMemoryPage> {
             _AddOption(
               icon: Icons.folder_open_outlined,
               title: 'Choose a file',
-              subtitle: 'PDF, note, image, audio, or document',
+              subtitle: 'PDF, note, spreadsheet, image, or document',
               onTap: widget.controller.loading ? null : _pickFile,
             ),
             const SizedBox(height: 16),
@@ -500,6 +537,31 @@ class _SettingsPageState extends State<SettingsPage> {
               );
             },
             child: const Text('Save address'),
+          ),
+          const SizedBox(height: 12),
+          OutlinedButton.icon(
+            onPressed: widget.controller.loading
+                ? null
+                : () async {
+                    final messenger = ScaffoldMessenger.of(context);
+                    final status = await widget.controller.testConnection();
+                    if (!mounted) return;
+                    messenger.showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          status ?? widget.controller.error ?? 'Connection failed.',
+                        ),
+                      ),
+                    );
+                  },
+            icon: widget.controller.loading
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.wifi_tethering_outlined),
+            label: Text(widget.controller.loading ? 'Checking…' : 'Test connection'),
           ),
           const SizedBox(height: 24),
           const ListTile(
@@ -805,10 +867,21 @@ class MemoryEvidence {
 }
 
 class UploadResult {
-  UploadResult(this.chunks);
+  UploadResult(this.chunks, this.relationshipsFound);
   final int chunks;
+  final int relationshipsFound;
   factory UploadResult.fromJson(Map<String, dynamic> json) =>
-      UploadResult((json['chunks'] as num?)?.toInt() ?? 0);
+      UploadResult(
+        (json['chunks'] as num?)?.toInt() ?? 0,
+        (json['relationships_found'] as num?)?.toInt() ?? 0,
+      );
+}
+
+class HealthResult {
+  HealthResult(this.memoriesStored);
+  final int memoriesStored;
+  factory HealthResult.fromJson(Map<String, dynamic> json) =>
+      HealthResult((json['memories_stored'] as num?)?.toInt() ?? 0);
 }
 
 class MemoraException implements Exception {
@@ -819,6 +892,19 @@ class MemoraException implements Exception {
 class MemoraApi {
   MemoraApi(this.baseUrl);
   final String baseUrl;
+
+  Future<HealthResult> health() async {
+    final request = await HttpClient()
+        .getUrl(Uri.parse('$baseUrl/health'))
+        .timeout(const Duration(seconds: 15));
+    final response = await request.close().timeout(const Duration(seconds: 15));
+    final body = await utf8.decoder.bind(response).join();
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw HttpException(_errorMessage(body));
+    }
+    return HealthResult.fromJson(jsonDecode(body) as Map<String, dynamic>);
+  }
+
   Future<MemoryResult> remember(String query) async {
     final request = await HttpClient()
         .postUrl(Uri.parse('$baseUrl/remember'))
