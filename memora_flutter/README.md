@@ -19,6 +19,9 @@ Flutter client for the MEMORA private-memory API.
 4. On an Android emulator, leave the default `http://10.0.2.2:8000`.
 
 The app calls `POST /ingest` for files/photos and `POST /remember` for memory questions.
+Use **Test connection** in Settings to verify `GET /health` before uploading
+or asking a question. The picker offers only backend-supported file types:
+PDF, DOCX, TXT, Markdown, XLSX, JPG/JPEG, PNG, and WebP.
 
 ## Run
 
