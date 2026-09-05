@@ -10,8 +10,20 @@ import 'package:speech_to_text/speech_to_text.dart' as speech;
 
 void main() => runApp(const MemoraApp());
 
-const _brand = Color(0xff6750a4);
-const _surface = Color(0xfffdfbff);
+// const _orange = Color(0xffFF6E42);
+// const _offWhite = Color(0xffF9F9F9);
+// const _teal = Color(0xff004E72);
+// const _navy = Color(0xff092634);
+
+const _orange = Color(0xff710014);
+const _offWhite = Color(0xffF2F1ED);
+const _teal = Color(0xffB38F6F);
+const _navy = Color(0xff161616);
+
+// const _orange = Color(0xff677D6A);
+// const _offWhite = Color(0xffD6BD98);
+// const _teal = Color(0xff40534C);
+// const _navy = Color(0xff1A3636);
 
 class MemoraApp extends StatefulWidget {
   const MemoraApp({super.key});
@@ -42,8 +54,16 @@ class _MemoraAppState extends State<MemoraApp> {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(seedColor: _brand, surface: _surface),
-        scaffoldBackgroundColor: _surface,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: _orange,
+          primary: _orange,
+          secondary: _teal,
+          surface: _offWhite,
+          onSurface: _navy,
+          onPrimary: _offWhite,
+          onSecondary: _offWhite,
+        ),
+        scaffoldBackgroundColor: _offWhite,
       ),
       home: HomeScreen(controller: controller),
     );
@@ -285,7 +305,7 @@ class _SearchPageState extends State<SearchPage> {
                   tooltip: listening ? 'Stop listening' : 'Ask by voice',
                   icon: Icon(
                     listening ? Icons.mic : Icons.mic_none,
-                    color: listening ? Colors.red : _brand,
+                    color: _orange,
                   ),
                   onPressed: _listen,
                 ),
@@ -525,7 +545,7 @@ class _BrandHeader extends StatelessWidget {
             width: compact ? 34 : 42,
             height: compact ? 34 : 42,
             decoration: BoxDecoration(
-              color: _brand,
+              color: _orange,
               borderRadius: BorderRadius.circular(12),
             ),
             child: const Icon(Icons.auto_awesome, color: Colors.white),
@@ -549,7 +569,7 @@ class _AnswerCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Card(
         elevation: 0,
-        color: const Color(0xffeee8ff),
+        color: const Color(0x1A004E72),
         child: Padding(
           padding: const EdgeInsets.all(20),
           child: Column(
@@ -557,7 +577,7 @@ class _AnswerCard extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  const Icon(Icons.psychology_alt_outlined, color: _brand),
+                  const Icon(Icons.psychology_alt_outlined, color: _teal),
                   const SizedBox(width: 8),
                   Text(
                     'Here’s what I found',
@@ -571,7 +591,7 @@ class _AnswerCard extends StatelessWidget {
               Text(
                 '${(result.confidence * 100).round()}% memory match',
                 style:
-                    const TextStyle(color: _brand, fontWeight: FontWeight.w700),
+                    const TextStyle(color: _teal, fontWeight: FontWeight.w700),
               ),
               const Divider(height: 28),
               Text('Evidence', style: Theme.of(context).textTheme.titleSmall),
@@ -650,8 +670,8 @@ class _AddOption extends StatelessWidget {
               children: [
                 CircleAvatar(
                   radius: 25,
-                  backgroundColor: const Color(0xffeee8ff),
-                  child: Icon(icon, color: _brand),
+                  backgroundColor: const Color(0x1A004E72),
+                  child: Icon(icon, color: _teal),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
@@ -681,7 +701,7 @@ class _EmptyTimeline extends StatelessWidget {
           padding: const EdgeInsets.all(24),
           child: Column(
             children: [
-              const Icon(Icons.timeline, size: 48, color: _brand),
+              const Icon(Icons.timeline, size: 48, color: _teal),
               const SizedBox(height: 12),
               Text(
                 'Your evidence trail will appear here',
@@ -713,11 +733,11 @@ class _TimelineItem extends StatelessWidget {
                 children: [
                   CircleAvatar(
                     radius: 18,
-                    backgroundColor: const Color(0xffeee8ff),
-                    child: Icon(entry.icon, color: _brand, size: 19),
+                    backgroundColor: const Color(0x1A004E72),
+                    child: Icon(entry.icon, color: _teal, size: 19),
                   ),
                   Expanded(
-                    child: Container(width: 2, color: const Color(0xffd7cfec)),
+                    child: Container(width: 2, color: const Color(0x33004E72)),
                   ),
                 ],
               ),

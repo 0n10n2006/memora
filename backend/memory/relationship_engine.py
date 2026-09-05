@@ -853,7 +853,7 @@ class RelationshipEngine:
                     f"{target.source} <-> "
                     f"{other.source}: "
                     f"{result['strength'].upper()} "
-                    f"{result['relationship_type'].upper()} "
+                    f"{(result.get('relationship_type'))}"
                     f"({result['score']:.4f})"
                 )
 
